@@ -69,7 +69,8 @@ impl Statement{
 #[derive(Debug,Clone)]
 pub enum ExpressionKind{
     Number(NumberExpr),
-    Binary(BinaryExpr)
+    Binary(BinaryExpr),
+    Parenthesized(ParenthesizedExpr),
 }
 #[derive(Debug,Clone)]
 pub struct NumberExpr{
@@ -101,6 +102,18 @@ impl BinaryExpr{
     }
 }
 
+#[derive(Debug,Clone)]
+pub struct ParenthesizedExpr{
+    open_paren:Token,
+    expr:ExprId,
+    close_paren:Token
+
+}
+impl ParenthesizedExpr{
+    pub fn new(open_paren:Token,expr:ExprId,close_paren:Token)->Self{
+        Self { open_paren, expr, close_paren }
+    }
+}
 #[derive(Debug,Clone,PartialEq)]
 pub enum BinOperatorAssiciativity{
     Left,
@@ -186,6 +199,17 @@ impl Ast{
     return self.statements.get(id);
     }
 
+    pub fn save_expression_statement(&mut self,expr_id:ExprId)->&Statement{
+     let stmt = Statement::new(StatementKind::Expression(expr_id), StmtId::new(0));
+     let id = self.statements.push(stmt);
+     self.statements.get_mut(id).id = id;
+     return self.statements.get(id);
+    }
+
+    pub fn save_parenthesized_expression(&mut self,expr_id:ExprId,open_paren:Token,close_paren:Token)->&Expression{
+        self.expr_from_kind(ExpressionKind::Parenthesized(ParenthesizedExpr::new(open_paren, expr_id, close_paren)))
+    }
+
     pub fn save_let_statement(
         &mut self,
     identifier:Token,
@@ -228,7 +252,7 @@ impl Ast{
     pub fn evaluate(&mut self){
         let mut evaluator = ExpressionEvaluator::new();
         self.visit(&mut evaluator);
-        println!("{}{}"," ".repeat(50),".".repeat(50));
+        println!("{}{}"," ".repeat(10),".".repeat(90));
         println!("{}"," ".repeat(20));
 
 
@@ -236,7 +260,7 @@ impl Ast{
         
         println!("{}"," ".repeat(20));
 
-        println!("{}{}"," ".repeat(50),".".repeat(50));
+        println!("{}{}"," ".repeat(10),".".repeat(90));
 
 
     }

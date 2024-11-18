@@ -51,6 +51,9 @@ impl Visitor for ExpressionEvaluator{
             super::ExpressionKind::Binary(bin_expr)=>{
                 self.visit_binary_expression(ast,bin_expr);
             }
+            super::ExpressionKind::Parenthesized(parenthesized_expr) => {
+                self.visit_parenthesized_expression(ast, parenthesized_expr);
+            },
         }
     }
 
@@ -74,8 +77,11 @@ impl Visitor for ExpressionEvaluator{
 
     }
     
-    fn visit_number(&mut self,ast: &super::Ast,number:&super::NumberExpr) {
+    fn visit_number(&mut self,_ast: &super::Ast,number:&super::NumberExpr) {
         self.result = Some(number.number);
         
+    }
+    fn visit_parenthesized_expression(&mut self,ast:&super::Ast,parenthesized_expr:&super::ParenthesizedExpr) {
+        self.visit_expression(ast, parenthesized_expr.expr);
     }
 }

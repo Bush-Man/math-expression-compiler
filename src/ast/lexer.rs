@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{write, Display, Formatter};
 
 use crate::ast::text::TextSpan;
 
@@ -18,6 +18,8 @@ pub enum TokenKind {
     Let,
 
     // Other
+    OpenParen,
+    CloseParen,
     Bad,
     Whitespace,
     Identifier,
@@ -38,6 +40,8 @@ impl Display for TokenKind {
             TokenKind::Let => write!(f, "Let"),
             TokenKind::Identifier => write!(f, "Identifier"),
             TokenKind::Equals => write!(f, "="),
+            TokenKind::OpenParen => write!(f,"Open parenthesis"),
+            TokenKind::CloseParen => write!(f,"Closing parenthesis"),
           
         }
     }
@@ -112,6 +116,8 @@ impl<'a> Lexer<'a> {
             '*'=> TokenKind::Asterisk,     
             '/' => TokenKind::Slash,
             '=' => TokenKind::Equals,
+            '(' => TokenKind::OpenParen,
+            ')'=>TokenKind::CloseParen,
             _ => TokenKind::Bad,
         }
     }

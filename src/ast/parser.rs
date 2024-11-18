@@ -1,7 +1,9 @@
 
 use std::borrow::Borrow;
 
-use super::{lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, ExprId, StmtId};
+use crate::ast::lib::Id;
+
+use super::{lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, ExprId, Statement, StmtId};
 
 pub struct Parser<'a> {
    pub tokens: Vec<Token>,
@@ -37,9 +39,12 @@ impl<'a> Parser<'a>{
         match current_token.kind{
             TokenKind::Let =>{
                 return self.parse_let_statement();
-            }
+            },
+            
             _ => {
-                todo!("Parse other statements types")
+                let expr_id = self.parse_expression();
+                let stmt = self.ast.stmt_from_stmt_kind(super::StatementKind::Expression(expr_id));
+                return stmt.id;
             }
         }
 
@@ -110,6 +115,25 @@ impl<'a> Parser<'a>{
         
           return match current_token.kind{
             TokenKind::Number(number)=>self.ast.save_number_expression(current_token, number).id,
+            TokenKind::OpenParen => {
+                let open_paren =current_token;
+                let expr_id = self.parse_expression();
+                let close_paren = self.consume().clone();
+                let expr = self.ast.save_parenthesized_expression(expr_id, open_paren, close_paren);
+                expr.id
+                   
+                 
+                   
+            },
+            TokenKind::CloseParen => {
+                let expr_id = self.parse_expression();
+                
+                 expr_id
+                   
+                 
+                   
+            }
+            
             _ => self.parse_binary_expression()
           }
             }
@@ -124,6 +148,7 @@ impl<'a> Parser<'a>{
         // }
         // println!("{:?}",self.current_token());
         self.current+= 1;
+       
     }
     fn consume(&mut self)->&Token{
         let token = self.tokens[self.current].borrow();

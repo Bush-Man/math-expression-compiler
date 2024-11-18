@@ -16,7 +16,7 @@ impl Printer {
         println!("{}{}", " ".repeat(self.indent), text);
     }
     pub fn print_same_line(&self,data:&str){
-        print!(" {}",data);
+        print!("{}",data);
     }
 
     fn enter_scope(&mut self) {
@@ -33,27 +33,36 @@ impl Printer {
 impl Visitor for Printer {
     
     fn visit_statement(&mut self, ast: &super::Ast, stmt_id: super::StmtId) {
-        self.print_same_line("Statement >");
+        self.print_same_line("Statement_start >>>");
+        self.enter_scope();
         self.do_visit_statement(ast, stmt_id);
-
+        self.exit_scope();
+        self.print_with_indent("Statement_end <<<");
+        self.exit_scope();
+        
     }
 
      fn visit_let_statement(&mut self, ast: &super::Ast, stmt: &super::LetStatement) {
-        self.print_same_line("Let Statement > ");
-
-        self.print_same_line("Identifier > ");
-        self.print_with_indent(&format!(" {} ", &stmt.identifier.span.literal));
+        self.print_same_line("Let_statement_start >> ");
+       self.enter_scope();
+        self.print_same_line("Identifier/variable_name > ");
+        self.exit_scope();
+        self.print_with_indent(&format!(" {}", &stmt.identifier.span.literal));
         self.exit_scope();
 
-        self.print_same_line("Initializer:");
+        self.print_same_line("Initializer_start {");
         // self.enter_scope();
         self.visit_expression(ast, stmt.initializer);
-        // self.exit_scope();
+        self.print_same_line("Initializer_end < ");
 
+        // self.exit_scope();
+        self.print_same_line("Let_statement_end << ");
+        self.exit_scope();
+       
     }
 
     fn visit_binary_expression(&mut self, ast: &super::Ast, bin_expr: &super::BinaryExpr) {
-        self.print_with_indent("Binary Expression: {");
+        self.print_with_indent("binary_expression_start {");
        self.enter_scope();
         self.print_with_indent("Left:");
         self.enter_scope();
@@ -65,13 +74,20 @@ impl Visitor for Printer {
         self.enter_scope();
         self.visit_expression(ast, bin_expr.right);
         self.exit_scope();
-        self.print_with_indent("}");
-
+        self.print_with_indent("binary_expression_end }");
+        self.exit_scope();
     }
 
-   
+   fn visit_parenthesized_expression(&mut self,ast:&super::Ast,parenthesized_expr:&super::ParenthesizedExpr) {
+        self.print_with_indent("parenthesized_expression_start {");
+        self.enter_scope();
+        self.visit_expression(ast, parenthesized_expr.expr);
+        self.exit_scope();
+        self.print_with_indent("parenthesized_expression_end}");
+        self.exit_scope();
 
-    /// Visits a number expression and prints its value.
+   }
+
     fn visit_number(&mut self, _ast: &super::Ast, number: &super::NumberExpr) {
         self.print_with_indent("Number:");
         self.enter_scope();
