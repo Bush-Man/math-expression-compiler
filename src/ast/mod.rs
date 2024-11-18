@@ -1,5 +1,6 @@
 use std::borrow::{Borrow, BorrowMut};
 
+use evaluator::ExpressionEvaluator;
 use lexer::{Token, TokenKind};
 use lib::{Id, IdVec};
 use printer::Printer;
@@ -14,6 +15,7 @@ pub mod parser;
 pub mod lib;
 pub mod visitor;
 pub mod printer;
+pub mod evaluator;
 
 
 id_gen!(ItemId);
@@ -221,6 +223,21 @@ impl Ast{
     pub fn visualize(&mut self){
         let mut printer = Printer::new(0);
         self.visit(&mut printer);
+
+    }
+    pub fn evaluate(&mut self){
+        let mut evaluator = ExpressionEvaluator::new();
+        self.visit(&mut evaluator);
+        println!("{}{}"," ".repeat(50),".".repeat(50));
+        println!("{}"," ".repeat(20));
+
+
+        println!("{} Answer: {:?}"," ".repeat(50),evaluator.result.unwrap());
+        
+        println!("{}"," ".repeat(20));
+
+        println!("{}{}"," ".repeat(50),".".repeat(50));
+
 
     }
 }
