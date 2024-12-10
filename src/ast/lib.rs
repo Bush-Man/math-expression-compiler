@@ -18,7 +18,9 @@ macro_rules! id_gen {
         }
       }
         
+    
     };
+   
 }
 
 pub trait Id: Copy + Clone + Sized{
@@ -58,5 +60,8 @@ impl<IdType:Id,T> IdVec<IdType,T>{
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter()
+    }
+    pub fn is_vec_empty(&self)->bool{
+        self.data.is_empty()
     }
 }

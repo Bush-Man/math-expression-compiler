@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 
 use crate::ast::lib::Id;
 
-use super::{lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, ExprId, Statement, StmtId};
+use super::{lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, Body, ExprId, Function, FunctionId, Item, Parameter, Statement, StmtId};
 
 pub struct Parser<'a> {
    pub tokens: Vec<Token>,
@@ -30,21 +30,26 @@ impl<'a> Parser<'a>{
 
     fn parse_items(&mut self){
         while matches!(self.is_at_end(),false){
-            let stmt_id = self.parse_statement();
-            self.ast.item_from_stmt_id(stmt_id);
+             self.parse_statement();
+            
         }
     }
-    fn parse_statement(&mut self)->StmtId{
+    fn parse_statement(&mut self){
         let current_token = self.current_token();
         match current_token.kind{
             TokenKind::Let =>{
-                return self.parse_let_statement();
+                let stmt_id = self.parse_let_statement();
+                self.ast.item_from_stmt_id(stmt_id);
             },
-            
+            TokenKind::Function =>{
+                let function_id = self.parse_function().expect("function id in parse statemtnt");
+                self.ast.item_from_function_id(function_id);
+
+            },          
             _ => {
                 let expr_id = self.parse_expression();
-                let stmt = self.ast.stmt_from_stmt_kind(super::StatementKind::Expression(expr_id));
-                return stmt.id;
+                self.ast.stmt_from_stmt_kind(super::StatementKind::Expression(expr_id));
+                
             }
         }
 
@@ -62,6 +67,75 @@ impl<'a> Parser<'a>{
         return stmt.id;
 
 
+    }
+    fn parse_function(&mut self)->Option<FunctionId>{
+        let current_token_keyword = self.consume_and_verify_token(TokenKind::Function);
+        let function_name_token= self.consume_and_verify_token(TokenKind::Identifier);
+        let current_token =self.current_token();
+        let  open_paren;
+        let  close_paren; 
+        let mut parameters_vec=Vec::new();
+        let open_brace;
+        let mut body_vec:Vec<StmtId> =  Vec::new();
+        let close_brace:Token;
+        match current_token.kind{
+            TokenKind::OpenParen=>{
+                open_paren = self.consume_and_verify_token(TokenKind::OpenParen);
+                if let Some(parameters )= self.parse_function_parameters(){
+                 parameters_vec=parameters;
+                }
+                close_paren = self.consume_and_verify_token(TokenKind::CloseParen);
+                open_brace = self.consume_and_verify_token(TokenKind::OpenBrace);
+                if let Some(body_stmts) = self.parse_function_body(){
+                    body_vec = body_stmts;
+                }
+                close_brace = self.consume_and_verify_token(TokenKind::CloseBrace);
+                let function_body = Body::new(open_brace,body_vec,close_brace);
+               
+
+                let func = self.ast.save_function(function_name_token.span.literal, open_paren, close_paren, parameters_vec);
+
+                
+                return Some(func);            
+            }
+            _ =>{
+               None
+            }
+        }
+    
+
+
+
+    }
+    fn parse_function_parameters(&mut self)->Option<Vec<Parameter>>{
+        let mut current_token = self.consume();
+        match current_token.kind {
+            TokenKind::CloseParen=>None,
+            TokenKind::Number(number)=>{
+              let mut params:Vec<Parameter> = Vec::new();
+                while current_token.kind !=TokenKind::CloseParen{
+                    if current_token.kind == TokenKind::Comma{
+                        self.consume_and_verify_token(TokenKind::Comma);
+                        current_token =self.current_token();
+                    }
+                    let parameter = Parameter::new(current_token.clone(), number);
+                    params.push(parameter);
+
+                }              
+               Some(params)
+               
+                
+               
+            },
+            _ => None
+            
+        }
+        
+
+    }
+    fn parse_function_body(&mut self)->Option<Vec<StmtId>>{
+              todo!("Implement parsing function body");
+               
     }
     fn parse_expression(&mut self)->ExprId{
        return self.parse_binary_expression();

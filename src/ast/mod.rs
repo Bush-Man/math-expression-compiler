@@ -28,9 +28,9 @@ id_gen!(FunctionId);
 pub struct Ast{
    pub items: IdVec<ItemId,Item>,
    pub statements: IdVec<StmtId,Statement>,
-   pub expressions: IdVec<ExprId,Expression>
+   pub expressions: IdVec<ExprId,Expression>,
+   pub functions: IdVec<FunctionId,Function>
 }
-
 
 #[derive(Debug,Clone,Copy)]
 pub enum ItemKind{
@@ -49,44 +49,49 @@ impl Item{
         Self{kind,id}
     }
 }
+#[derive(Debug)]
 pub struct Function{
-    name:String,
-    open_paren:Token,
-    parameters:Vec<Parameter>,
-    close_paren:Token,
-    body:Body
+   pub name:String,
+   pub open_paren:Token,
+   pub parameters:Vec<Parameter>,
+   pub close_paren:Token,
+   //pub body:Body,
 }
 impl Function{
-    pub fn new( name:String,open_paren:Token,close_paren:Token,parameters:Vec<Parameter>,body:Body)->Self{
+    pub fn new( name:String,open_paren:Token,close_paren:Token,parameters:Vec<Parameter>)->Self{
         Self {
              name,
               open_paren,
                parameters: parameters,
                close_paren,
-                body: body
+                // body: body,
              }
 }
 }
 #[derive(Debug,Clone)]
 pub struct Parameter{
-    identifier:Token,
-    value:i64
+    pub identifier:Token,
+    pub value:i64
 
 }
-#[derive(Debug,Clone)]
-pub struct Parameters{
-    params:Vec<Parameter>
-}
-impl Parameters{
-    pub fn new()->Self{
-        Self { params: Vec::new() }
+
+impl Parameter{
+    pub fn new(identifier:Token,value:i64)->Self{
+        Self {identifier,value }
     }
 }
 #[derive(Debug,Clone)]
 pub struct Body{
-    open_brace:Token,
-    statements:Vec<StmtId>,
-    return_value: Option<i64>
+   pub  open_brace:Token,
+   pub  statements:Vec<StmtId>,
+   pub return_value: Option<i64>,
+   pub close_brace:Token
+}
+
+impl Body{
+    pub fn new(open_brace:Token,statements:Vec<StmtId>,close_brace:Token)->Self{
+       Self { open_brace, statements, return_value: None, close_brace }
+    }
 }
 #[derive(Debug,Clone)]
 pub enum StatementKind{
@@ -146,9 +151,9 @@ impl BinaryExpr{
 
 #[derive(Debug,Clone)]
 pub struct ParenthesizedExpr{
-    open_paren:Token,
-    expr:ExprId,
-    close_paren:Token
+   pub open_paren:Token,
+   pub expr:ExprId,
+   pub close_paren:Token
 
 }
 impl ParenthesizedExpr{
@@ -159,9 +164,9 @@ impl ParenthesizedExpr{
 
 #[derive(Debug,Clone)]
 pub struct AssignExpr{
-    let_keyword:Token,
-    equals:Token,
-    expr:ExprId
+   pub let_keyword:Token,
+   pub equals:Token,
+   pub expr:ExprId
 }
 impl AssignExpr{
     pub fn new(let_keyword:Token,expr:ExprId,equals:Token)->Self{
@@ -222,7 +227,8 @@ impl Ast{
         Self { 
              items: IdVec::new(),
              statements: IdVec::new(), 
-             expressions: IdVec::new() 
+             expressions: IdVec::new(),
+             functions:IdVec::new()
             }
     }
     pub fn query_item(&self,item_id:ItemId)->&Item{
@@ -244,8 +250,13 @@ impl Ast{
 
          return self.items.get(id);
 
-
-
+    }
+    pub fn item_from_function_id(&mut self,function_id:FunctionId)->&Item{
+        let item_kind = ItemKind::Function(function_id);
+        let new_item = Item::new(item_kind, ItemId::new(0));
+        let item_id = self.items.push(new_item);
+        self.items.get_mut(item_id).id = item_id;
+        return self.items.get(item_id);
     }
     pub fn stmt_from_stmt_kind(&mut self,kind:StatementKind)->&Statement{
      let stmt = Statement::new(kind, StmtId::new(0));
@@ -254,6 +265,16 @@ impl Ast{
 
     return self.statements.get(id);
     }
+    pub fn save_function(&mut self,name:String,open_paren:Token,close_paren:Token,parameters:Vec<Parameter>)->FunctionId{
+        let function = Function::new(name, open_paren, close_paren, parameters);
+        let function_id = self.functions.push(function);
+        print!("function id:{:?}",function_id);
+        return function_id;
+
+        
+        
+
+    }
 
     pub fn save_expression_statement(&mut self,expr_id:ExprId)->&Statement{
      let stmt = Statement::new(StatementKind::Expression(expr_id), StmtId::new(0));
@@ -261,6 +282,7 @@ impl Ast{
      self.statements.get_mut(id).id = id;
      return self.statements.get(id);
     }
+
 
     pub fn save_parenthesized_expression(&mut self,expr_id:ExprId,open_paren:Token,close_paren:Token)->&Expression{
         self.expr_from_kind(ExpressionKind::Parenthesized(ParenthesizedExpr::new(open_paren, expr_id, close_paren)))
@@ -275,7 +297,8 @@ impl Ast{
          let_keyword: TokenKind::Let,
           identifier,
           initializer,
-           variable_id:VariableId::new(0)}))}
+           variable_id:VariableId::new(0)}))
+    }
 
     pub fn expr_from_kind(&mut self,kind:ExpressionKind)->&Expression{
         let expression = Expression::new(kind, ExprId::new(0));

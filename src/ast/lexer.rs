@@ -25,6 +25,9 @@ pub enum TokenKind {
     Identifier,
     Function,
     Eof,
+    Comma,
+    OpenBrace,
+    CloseBrace
 }
 
 impl Display for TokenKind {
@@ -43,7 +46,10 @@ impl Display for TokenKind {
             TokenKind::Equals => write!(f, "="),
             TokenKind::OpenParen => write!(f,"Open parenthesis"),
             TokenKind::CloseParen => write!(f,"Closing parenthesis"),
-            TokenKind::Function=>write!(f, "Function")
+            TokenKind::Function=>write!(f, "Function"),
+            TokenKind::Comma=>write!(f, "Comma"),
+            TokenKind::OpenBrace => write!(f,"Open Brace"),
+            TokenKind::CloseBrace => write!(f,"Close Brace"),
           
         }
     }
@@ -121,6 +127,9 @@ impl<'a> Lexer<'a> {
             '=' => TokenKind::Equals,
             '(' => TokenKind::OpenParen,
             ')'=>TokenKind::CloseParen,
+            ','=>TokenKind::Comma,
+            '{'=>TokenKind::OpenBrace,
+            '}' => TokenKind::CloseBrace,
             _ => TokenKind::Bad,
         }
     }
