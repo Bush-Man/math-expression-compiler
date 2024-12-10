@@ -89,7 +89,7 @@ impl Visitor for Printer {
    }
 
     fn visit_number(&mut self, _ast: &super::Ast, number: &super::NumberExpr) {
-        self.print_with_indent("Number:");
+        // self.print_with_indent("Number:");
         self.enter_scope();
         self.print_with_indent(&number.number.to_string());
         self.exit_scope();

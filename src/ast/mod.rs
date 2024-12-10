@@ -1,4 +1,4 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::{borrow::{Borrow, BorrowMut}, vec};
 
 use evaluator::ExpressionEvaluator;
 use lexer::{Token, TokenKind};
@@ -22,6 +22,7 @@ id_gen!(ItemId);
 id_gen!(StmtId);
 id_gen!(ExprId);
 id_gen!(VariableId);
+id_gen!(FunctionId);
 
 #[derive(Debug)]
 pub struct Ast{
@@ -33,7 +34,8 @@ pub struct Ast{
 
 #[derive(Debug,Clone,Copy)]
 pub enum ItemKind{
-    Statement(StmtId)
+    Statement(StmtId),
+    Function(FunctionId)
 }
 #[derive(Debug,Clone,Copy)]
 pub struct Item{
@@ -46,6 +48,45 @@ impl Item{
     pub fn new(kind:ItemKind,id:ItemId)->Self{
         Self{kind,id}
     }
+}
+pub struct Function{
+    name:String,
+    open_paren:Token,
+    parameters:Vec<Parameter>,
+    close_paren:Token,
+    body:Body
+}
+impl Function{
+    pub fn new( name:String,open_paren:Token,close_paren:Token,parameters:Vec<Parameter>,body:Body)->Self{
+        Self {
+             name,
+              open_paren,
+               parameters: parameters,
+               close_paren,
+                body: body
+             }
+}
+}
+#[derive(Debug,Clone)]
+pub struct Parameter{
+    identifier:Token,
+    value:i64
+
+}
+#[derive(Debug,Clone)]
+pub struct Parameters{
+    params:Vec<Parameter>
+}
+impl Parameters{
+    pub fn new()->Self{
+        Self { params: Vec::new() }
+    }
+}
+#[derive(Debug,Clone)]
+pub struct Body{
+    open_brace:Token,
+    statements:Vec<StmtId>,
+    return_value: Option<i64>
 }
 #[derive(Debug,Clone)]
 pub enum StatementKind{
@@ -71,6 +112,7 @@ pub enum ExpressionKind{
     Number(NumberExpr),
     Binary(BinaryExpr),
     Parenthesized(ParenthesizedExpr),
+    Assignment(AssignExpr)
 }
 #[derive(Debug,Clone)]
 pub struct NumberExpr{
@@ -114,6 +156,20 @@ impl ParenthesizedExpr{
         Self { open_paren, expr, close_paren }
     }
 }
+
+#[derive(Debug,Clone)]
+pub struct AssignExpr{
+    let_keyword:Token,
+    equals:Token,
+    expr:ExprId
+}
+impl AssignExpr{
+    pub fn new(let_keyword:Token,expr:ExprId,equals:Token)->Self{
+        Self { let_keyword, equals , expr}
+    }
+}
+
+
 #[derive(Debug,Clone,PartialEq)]
 pub enum BinOperatorAssiciativity{
     Left,
@@ -236,7 +292,12 @@ impl Ast{
     pub fn save_binary_expression(&mut self,operator:BinOperator,left:ExprId,right:ExprId)->&Expression{
         return self.expr_from_kind(ExpressionKind::Binary(BinaryExpr { left, operator, right }))
     }
+   
 
+    pub fn save_assignment_expression(&mut self,equals:Token,let_keyword:Token,expr:ExprId)->&Expression{
+        return self.expr_from_kind(ExpressionKind::Assignment(AssignExpr{let_keyword,expr,equals}));
+
+    }
 
     pub fn visit(&mut self,visitor:&mut dyn Visitor){
        for item in self.items.iter(){
@@ -252,15 +313,19 @@ impl Ast{
     pub fn evaluate(&mut self){
         let mut evaluator = ExpressionEvaluator::new();
         self.visit(&mut evaluator);
+        if let Some(result) = evaluator.result{
         println!("{}{}"," ".repeat(10),".".repeat(90));
         println!("{}"," ".repeat(20));
 
 
-        println!("{} Answer: {:?}"," ".repeat(50),evaluator.result.unwrap());
+        println!("{} Answer: {:?}"," ".repeat(50),result);
         
         println!("{}"," ".repeat(20));
 
         println!("{}{}"," ".repeat(10),".".repeat(90));
+        }
+       
+       
 
 
     }

@@ -1,13 +1,16 @@
+use core::panic;
+
 use super::{visitor::Visitor, BinOperatorKind};
 
  pub struct ExpressionEvaluator{
-    pub result:Option<i64>
+    pub result:Option<i64>,
+    pub value:Option<i64>
 }
 
 
 impl ExpressionEvaluator{
     pub fn new()->Self{
-        Self { result: None }
+        Self { result: None ,value:None}
     }
 }
 
@@ -27,6 +30,7 @@ impl Visitor for ExpressionEvaluator{
             super::ItemKind::Statement(stmt_id)=>{
                 self.visit_statement(ast, stmt_id);
             }
+            super::ItemKind::Function(function_id) => todo!(),
         }
     }
 
@@ -54,21 +58,24 @@ impl Visitor for ExpressionEvaluator{
             super::ExpressionKind::Parenthesized(parenthesized_expr) => {
                 self.visit_parenthesized_expression(ast, parenthesized_expr);
             },
+            super::ExpressionKind::Assignment(assign_expr) => {
+                self.visit_assignment_expression(ast, assign_expr);
+            }
         }
     }
 
     fn visit_binary_expression(&mut self,ast: &super::Ast,bin_expr:&super::BinaryExpr){
         self.visit_expression(ast, bin_expr.left);
-        let left = self.result.unwrap();
-        // println!("Left: {:?}",left);
+        let left = self.value.unwrap();
         self.visit_expression(ast, bin_expr.right);
-        let right = self.result.unwrap();
-        self.result = Some(match bin_expr.operator.kind{
+        let right = self.value.unwrap();
+       
+           self.result =Some( match bin_expr.operator.kind{
+            BinOperatorKind::Minus => left - right,
            BinOperatorKind::Plus => left + right,
-           BinOperatorKind::Minus => left - right,
-           BinOperatorKind::Multiply => left * right,
+           BinOperatorKind::Multiply =>left * right,
            BinOperatorKind::Divide => left / right,
-
+          
         });
     }
     
@@ -78,7 +85,7 @@ impl Visitor for ExpressionEvaluator{
     }
     
     fn visit_number(&mut self,_ast: &super::Ast,number:&super::NumberExpr) {
-        self.result = Some(number.number);
+        self.value= Some(number.number);
         
     }
     fn visit_parenthesized_expression(&mut self,ast:&super::Ast,parenthesized_expr:&super::ParenthesizedExpr) {

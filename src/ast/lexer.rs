@@ -23,6 +23,7 @@ pub enum TokenKind {
     Bad,
     Whitespace,
     Identifier,
+    Function,
     Eof,
 }
 
@@ -42,6 +43,7 @@ impl Display for TokenKind {
             TokenKind::Equals => write!(f, "="),
             TokenKind::OpenParen => write!(f,"Open parenthesis"),
             TokenKind::CloseParen => write!(f,"Closing parenthesis"),
+            TokenKind::Function=>write!(f, "Function")
           
         }
     }
@@ -95,6 +97,7 @@ impl<'a> Lexer<'a> {
                 let identifier = self.consume_identifier();
                 kind = match identifier.as_str() {
                     "let" => TokenKind::Let,
+                    "function" => TokenKind::Function,
                     _ => TokenKind::Identifier,
                 }
             } else {

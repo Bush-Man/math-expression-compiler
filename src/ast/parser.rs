@@ -50,9 +50,11 @@ impl<'a> Parser<'a>{
 
     }
     fn parse_let_statement(&mut self)->StmtId{
-        self.consume_and_verify_token(TokenKind::Let);
+        let token = self.consume_and_verify_token(TokenKind::Let);
         let identifier = self.current_token().clone();
+        self.consume();
         self.consume_and_verify_token(TokenKind::Equals);
+
         
         let expr_id = self.parse_expression();
         let stmt = self.ast.save_let_statement(identifier,expr_id);
@@ -132,7 +134,8 @@ impl<'a> Parser<'a>{
                    
                  
                    
-            }
+            },
+            
             
             _ => self.parse_binary_expression()
           }
@@ -141,18 +144,25 @@ impl<'a> Parser<'a>{
 
     
 
-    fn consume_and_verify_token(&mut self,token_kind:TokenKind){
-        // if self.current_token().kind != token_kind{
-        //     todo!("consume and verify token: Diagnostic not matching token")
+    fn consume_and_verify_token(&mut self,token_kind:TokenKind)->Token{
+        let current_token = self.current_token().clone();
+        if current_token.kind != token_kind{
+        println!("Found Token:< {:?} >, Expected Token< {:?} >",current_token.kind,token_kind);
 
-        // }
-        // println!("{:?}",self.current_token());
-        self.current+= 1;
-       
+           
+
+        }
+        if current_token.kind != TokenKind::Eof{
+        self.current+=1;
+
+        }
+        current_token
     }
     fn consume(&mut self)->&Token{
         let token = self.tokens[self.current].borrow();
+        if token.kind != TokenKind::Eof{
         self.current+=1;
+        }
         return &token;
 
     }

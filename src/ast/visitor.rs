@@ -1,4 +1,4 @@
-use super::{Ast, BinaryExpr, ExprId, ExpressionKind, ItemId, ItemKind, LetStatement, NumberExpr, ParenthesizedExpr, StatementKind, StmtId};
+use super::{AssignExpr, Ast, BinaryExpr, ExprId, ExpressionKind, ItemId, ItemKind, LetStatement, NumberExpr, ParenthesizedExpr, StatementKind, StmtId};
 
 
 pub trait Visitor{
@@ -16,6 +16,7 @@ pub trait Visitor{
             ItemKind::Statement(stmt_id)=>{
                 self.visit_statement(ast, stmt_id);
             }
+            ItemKind::Function(function_id) => todo!(),
         }
     }
     fn do_visit_statement(&mut self,ast: &Ast,stmt_id:StmtId){
@@ -41,6 +42,9 @@ pub trait Visitor{
             ExpressionKind::Parenthesized(parenthesized_expr) => {
                 self.visit_parenthesized_expression(ast,parenthesized_expr);
             }
+            ExpressionKind::Assignment(assign_expr) => {
+                self.visit_assignment_expression(ast,assign_expr);
+            }
         }
     }
     fn visit_let_statement(&mut self,ast:&Ast,stmt:&LetStatement);
@@ -51,5 +55,8 @@ pub trait Visitor{
     }
     fn visit_parenthesized_expression(&mut self,ast:&Ast,parenthesized_expr:&ParenthesizedExpr){
           self.visit_expression(ast, parenthesized_expr.expr);
+    }
+    fn visit_assignment_expression(&mut self,ast:&Ast,assign_expr:&AssignExpr){
+        self.visit_expression(ast, assign_expr.expr);
     }
 }
