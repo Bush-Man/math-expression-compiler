@@ -3,19 +3,21 @@ use std::borrow::Borrow;
 
 use crate::ast::lib::Id;
 
-use super::{lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, Body, ExprId, Function, FunctionId, Item, Parameter, Statement, StmtId};
+use super::{global_scope::GlobalScope, lexer::{Token, TokenKind}, Ast, BinOperator, BinOperatorAssiciativity, BinOperatorKind, Body, ExprId, Function, FunctionId, Item, Parameter, Statement, StatementKind, StmtId};
 
 pub struct Parser<'a> {
    pub tokens: Vec<Token>,
    pub current: usize,
-   pub ast: &'a mut Ast
+   pub ast: &'a mut Ast,
+   pub scope: &'a mut GlobalScope
 }
 impl<'a> Parser<'a>{
-    pub fn new(tokens:Vec<Token>,ast:&'a mut Ast)->Self{
+    pub fn new(tokens:Vec<Token>,ast:&'a mut Ast,scope:&'a mut GlobalScope)->Self{
         Self { 
             tokens: tokens.into_iter().filter(|token|token.kind != TokenKind::Whitespace).collect(),
             current: 0,
-            ast
+            ast,
+            scope
         }
     }
 
@@ -57,10 +59,13 @@ impl<'a> Parser<'a>{
     fn parse_let_statement(&mut self)->StmtId{
         let token = self.consume_and_verify_token(TokenKind::Let);
         let identifier = self.current_token().clone();
+        
         self.consume();
         self.consume_and_verify_token(TokenKind::Equals);
-
+        let value = self.current_token().span.literal.clone();
         
+        
+        self.scope.add_global_variable(identifier.span.literal.clone(), value);
         let expr_id = self.parse_expression();
         let stmt = self.ast.save_let_statement(identifier,expr_id);
 
@@ -134,8 +139,8 @@ impl<'a> Parser<'a>{
 
     }
     fn parse_function_body(&mut self)->Option<Vec<StmtId>>{
-              todo!("Implement parsing function body");
-               
+     todo!("implement parsing function body")
+
     }
     fn parse_expression(&mut self)->ExprId{
        return self.parse_binary_expression();

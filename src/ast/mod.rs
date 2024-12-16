@@ -16,6 +16,7 @@ pub mod lib;
 pub mod visitor;
 pub mod printer;
 pub mod evaluator;
+pub mod global_scope;
 
 
 id_gen!(ItemId);
