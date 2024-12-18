@@ -44,4 +44,12 @@ impl GlobalScope{
 
          }
     }
+    pub fn get_all_global_variables(&self)->Option<HashMap<String,String>>{
+        if self.variables.is_empty(){
+            return None;
+        }else{
+            return Some(self.variables.clone());
+            
+        }
+    }
 }
