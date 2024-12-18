@@ -72,13 +72,13 @@ impl Function{
 #[derive(Debug,Clone)]
 pub struct Parameter{
     pub identifier:Token,
-    pub value:i64
+    pub value:Option<i64>
 
 }
 
 impl Parameter{
-    pub fn new(identifier:Token,value:i64)->Self{
-        Self {identifier,value }
+    pub fn new(identifier:Token)->Self{
+        Self {identifier,value:None }
     }
 }
 #[derive(Debug,Clone)]

@@ -1,5 +1,5 @@
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, vec};
 
 use crate::ast::lib::Id;
 
@@ -116,18 +116,18 @@ impl<'a> Parser<'a>{
         let mut current_token = self.consume();
         match current_token.kind {
             TokenKind::CloseParen=>None,
-            TokenKind::Number(number)=>{
-              let mut params:Vec<Parameter> = Vec::new();
+            TokenKind::Identifier=>{
+              let mut identifiers:Vec<Parameter> = Vec::new();
                 while current_token.kind !=TokenKind::CloseParen{
                     if current_token.kind == TokenKind::Comma{
                         self.consume_and_verify_token(TokenKind::Comma);
                         current_token =self.current_token();
                     }
-                    let parameter = Parameter::new(current_token.clone(), number);
-                    params.push(parameter);
+                    let parameter = Parameter::new(current_token.clone());
+                    identifiers.push(parameter);
 
                 }              
-               Some(params)
+               return  Some(identifiers);
                
                 
                
